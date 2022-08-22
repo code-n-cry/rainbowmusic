@@ -1,35 +1,40 @@
 import librosa
 import pandas as pd
-from numpy import mean, var
 
 
-def featuring(sound, sr: int = 22050) -> pd.DataFrame:
-    file, _ = librosa.effects.trim(sound)
-    harmony, perceptr = librosa.effects.hpss(file)
-    features_dict = {
-            'chroma_stft_mean': mean(librosa.feature.chroma_stft(file)),
-            'chroma_stft_var': var(librosa.feature.chroma_stft(file)),
-            'rms_mean': mean(librosa.feature.rms(file)),
-            'rms_var': var(librosa.feature.rms(file)),
-            'spectral_centroid_mean': mean(librosa.feature.spectral_centroid(file)),
-            'spectral_centroid_var': var(librosa.feature.spectral_centroid(file)),
-            'spectral_bandwidth_var': var(librosa.feature.spectral_bandwidth(file)),
-            'spectral_bandwidth_mean': mean(librosa.feature.spectral_bandwidth(file)),
-            'rolloff_var': var(librosa.feature.spectral_rolloff(file)),
-            'rolloff_mean': mean(librosa.feature.spectral_rolloff(file)),
-            'zero_crossing_rate_mean': mean(librosa.feature.zero_crossing_rate(file)),
-            'zero_crossing_rate_var': var(librosa.feature.zero_crossing_rate(file)),
-            'harmony_mean': mean(harmony),
-            'harmony_var': var(harmony),
-            'perceptr_mean': mean(perceptr),
-            'perceptr_var': var(perceptr),
-            'tempo': librosa.beat.tempo(file, sr=sr)[0],
-        }
-    mfccs = librosa.feature.mfcc(file, n_mfcc=20)
-    for i in range(len(mfccs)):
-            features_dict[f'mfcc{i + 1}_mean'] = mean(mfccs[i])
-            features_dict[f'mfcc{i + 1}_var'] = var(mfccs[i])
-    return features_dict
+def create_audio_features(sound, sr=22050):
+    audio_file, _ = librosa.effects.trim(y=sound)
+    audio_features = {}
+    chromagram = librosa.feature.chroma_stft(y=audio_file, sr=sr)[0]
+    audio_features['chroma_stft_mean'] = chromagram.mean()
+    audio_features['chroma_stft_var'] = chromagram.var()
+    rms = librosa.feature.rms(y=audio_file)[0]
+    audio_features['rms_mean'] = rms.mean()
+    audio_features['rms_var'] = rms.var()
+    spectral_centroids = librosa.feature.spectral_centroid(y=audio_file, sr=sr)[0]
+    audio_features['spectral_centroid_mean'] = spectral_centroids.mean()
+    audio_features['spectral_centroid_var'] = spectral_centroids.var()
+    spectral_bandwidth = librosa.feature.spectral_bandwidth(y=audio_file, sr=sr)[0]
+    audio_features['spectral_bandwidth_mean'] = spectral_bandwidth.mean()
+    audio_features['spectral_bandwidth_var'] = spectral_bandwidth.var()
+    spectral_rolloff = librosa.feature.spectral_rolloff(y=audio_file, sr=sr)[0]
+    audio_features['rolloff_mean'] = spectral_rolloff.mean()
+    audio_features['rolloff_var'] = spectral_rolloff.var()
+    zero_crossing_rate = librosa.feature.zero_crossing_rate(y=audio_file)[0]
+    audio_features['zero_crossing_rate_mean'] = zero_crossing_rate.mean()
+    audio_features['zero_crossing_rate_var'] = zero_crossing_rate.var()
+    harmony, perceptr = librosa.effects.hpss(y=audio_file)
+    audio_features['harmony_mean'] = harmony.mean()
+    audio_features['harmony_var'] = harmony.var()
+    audio_features['perceptr_mean'] = perceptr.mean()
+    audio_features['perceptr_var'] = perceptr.var()
+    tempo, _ = librosa.beat.beat_track(y=audio_file, sr = sr)
+    audio_features['tempo'] = tempo
+    mfccs = librosa.feature.mfcc(y=audio_file, sr=sr)    
+    for i in range(mfccs.shape[0]):
+        audio_features[f'mfcc{i+1}_mean'] = mfccs[i].mean()
+        audio_features[f'mfcc{i+1}_var'] = mfccs[i].var()
+    return audio_features
 
 
 def to_df(filename: str):
@@ -45,7 +50,7 @@ def to_df(filename: str):
             offset=(i * second_block),
             duration=second_block
         )
-        features = featuring(sound, sr)
+        features = create_audio_features(sound, sr)
         for key in features:
             if key not in df_dict:
                 df_dict[key] = []
