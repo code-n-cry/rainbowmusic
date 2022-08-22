@@ -1,0 +1,7 @@
+tensorflow
+asyncio
+aiogram
+librosa
+pydub
+numpy
+sklearn
