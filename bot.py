@@ -9,7 +9,8 @@ from new_file_featuring import to_df
 from tensorflow import keras
 from pydub import AudioSegment 
 import os
-from sklearn.preprocessing import MinMaxScaler
+from pickle import load
+from sklearn.preprocessing import StandardScaler
 import pandas as pd
 import numpy as np
 
@@ -34,6 +35,8 @@ def create_model():
     return model
 
 
+with open('scaler.pickle', 'rb') as sc:
+    scaler = load(sc)
 bot_token = '5274618716:AAFR-C9zDOTU_BAUGIUMAXMkbSWsSOGqEy4'
 bot = Bot(bot_token)
 storage = MemoryStorage()
@@ -91,7 +94,6 @@ async def process_wav(message: Message):
     }
     keras.backend.clear_session()
     model = create_model()
-    scaler = MinMaxScaler()
     df = pd.DataFrame(scaler.fit_transform(df), columns=df.columns)
     model.load_weights('music.h5')
     predict_data = pd.DataFrame({
