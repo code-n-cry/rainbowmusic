@@ -2,9 +2,10 @@ import librosa
 import pandas as pd
 
 
-def create_audio_features(sound, sr=22050):
+def create_audio_features(sound: str, sr : int = 22050):
     audio_file, _ = librosa.effects.trim(y=sound)
     audio_features = {}
+    #audio_features['length'] = sound.shape[0]
     chromagram = librosa.feature.chroma_stft(y=audio_file, sr=sr)[0]
     audio_features['chroma_stft_mean'] = chromagram.mean()
     audio_features['chroma_stft_var'] = chromagram.var()
@@ -34,6 +35,9 @@ def create_audio_features(sound, sr=22050):
     for i in range(mfccs.shape[0]):
         audio_features[f'mfcc{i+1}_mean'] = mfccs[i].mean()
         audio_features[f'mfcc{i+1}_var'] = mfccs[i].var()
+    mel_spec = librosa.feature.melspectrogram(y=audio_file, sr=sr)
+    audio_features['mel_spec_mean'] = mel_spec.mean()
+    audio_features['mel_spec_var'] = mel_spec.var()
     return audio_features
 
 

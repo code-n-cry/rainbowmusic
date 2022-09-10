@@ -10,15 +10,14 @@ from tensorflow import keras
 from pydub import AudioSegment 
 import os
 from pickle import load
-from sklearn.preprocessing import StandardScaler
 import pandas as pd
 import numpy as np
 
 
-def create_model():
+def create_model(shape):
     keras.backend.clear_session()
     model = keras.models.Sequential([
-        keras.layers.InputLayer(input_shape=(57)),
+        keras.layers.InputLayer(input_shape=(shape)),
         keras.layers.Dense(units=1024, activation='relu'),
         keras.layers.Dropout(0.3),
         keras.layers.Dense(units=512, activation='relu'),
@@ -78,6 +77,7 @@ async def process_wav(message: Message):
         await message.reply('Файл слишком большой для нашего интернета😥', reply_markup=again_kb)
         return
     except Exception as e:
+        print(e)
         await message.reply('Неверный формат(или мы дурачки)😳')
         return
     recs = {
@@ -92,10 +92,10 @@ async def process_wav(message: Message):
         'Регги': 'reggae.wav',
         'Рок': 'korol_i_shut.wav',
     }
-    keras.backend.clear_session()
-    model = create_model()
     df = pd.DataFrame(scaler.fit_transform(df), columns=df.columns)
-    model.load_weights('music.h5')
+    print(df.shape[1])
+    model = create_model(df.shape[1])
+    model.load_weights('music2.h5')
     predict_data = pd.DataFrame({
         'Id': range(0, df.shape[0]),
         'Label': np.argmax(model.predict(scaler.transform(df)), axis=1)

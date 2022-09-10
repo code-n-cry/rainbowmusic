@@ -5,3 +5,4 @@ librosa
 pydub
 numpy
 sklearn
+pandas
